@@ -6,20 +6,25 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
 {
-    function login(Request $request)
+    public function login(Request $request)
     {
         $admin = Admin::where('email', 'admin@admin.com')->first();
-        if ($request->email != null && $request->password != null) {
-            if ($request->email == "admin@admin.com" && $request->password == Hash::check($request->password, $admin->password)) {
-                $response =   response($admin);
-            } else {
-                $response = response(['error' => 'Email or Password is not matched']);
-            }
+        $validator = Validator::make($request->all(), ['userName' => 'required|email',
+            'password' => 'required|min:6']);
+        if ($validator->fails()) {
+            $response = response()->json(['status' => 422, 'errors' => $validator->errors()]);
         } else {
-            $response = response(['error' => 'Email and Password are required']);
+            if ($request->userName == "admin@admin.com" && $request->password == Hash::check($request->password, $admin->password)) {
+                $response = response()->json(['status' => 200,
+                    'data' => 'Login successfully']);
+            } else {
+                $response = response()->json(['status' => 402,
+                    'error' => 'Email or Password is not matched']);
+            }
         }
         return $response;
     }
